@@ -17,12 +17,12 @@ A fitness tracking app that uses real-time geolocation to track running routes w
 
 ### 1. Project Setup
 - [x] Initialize Expo project
-- [ ] Install required dependencies:
-  - [ ] `expo-location` for geolocation tracking
-  - [ ] `@rnmapbox/maps` for Mapbox integration
-  - [ ] `nativewind` and configure Tailwind CSS
-  - [ ] `expo-sqlite` for local data storage
-  - [ ] `expo-sensors` for additional motion data
+- [x] Install required dependencies:
+  - [x] `expo-location` for geolocation tracking
+  - [x] `@rnmapbox/maps` for Mapbox integration
+  - [x] `nativewind` and configure Tailwind CSS
+  - [x] `expo-sqlite` for local data storage
+  - [x] `expo-sensors` for additional motion data
 
 ### 2. Core Features Implementation
 - [ ] Location Tracking Service
