@@ -1,0 +1,14 @@
+---
+description: Provides general instructions for project management, including terminal commands, package management, and file operations.
+globs: *.*
+---
+- Use bash for terminal commands.
+- If installed, upgrade using:
+  expo upgrade <package-name>
+  or
+  pnpm add <package-name>
+  if not supported by Expo.
+- Utilize official Expo libraries and upgrade them using Expo's commands.
+- Avoid deleting existing functionality or files without a valid reason.
+- Follow the recommended folder structure and maintain organized code for scalability and readability.
+- Implement navigation using Expo Router for clean and declarative routing.
