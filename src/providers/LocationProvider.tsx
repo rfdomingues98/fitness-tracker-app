@@ -8,7 +8,7 @@ import React, {
   useState,
 } from 'react'
 
-interface LocationData {
+export interface LocationData {
   latitude: number
   longitude: number
   altitude: number | null
@@ -72,19 +72,16 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
 
   const requestBackgroundPermission =
     async (): Promise<Location.PermissionStatus> => {
-      // First, ensure foreground permission is granted
       const foregroundStatus = await requestForegroundPermission()
       if (foregroundStatus !== Location.PermissionStatus.GRANTED) {
         console.warn(
           'Foreground permission is required before requesting background permission.'
         )
-        // Return the current background status or a denied status
         const currentBackground = await Location.getBackgroundPermissionsAsync()
         setBackgroundPermissionStatus(currentBackground.status)
         return currentBackground.status
       }
 
-      // Now request background permission
       const {status} = await Location.requestBackgroundPermissionsAsync()
       setBackgroundPermissionStatus(status)
       return status
@@ -100,11 +97,10 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
 
     if (fgStatus !== Location.PermissionStatus.GRANTED) {
       console.error('Foreground location permission not granted.')
-      // Consider throwing an error or providing user feedback
+      // TODO: Provide user some feedback
       return
     }
 
-    // Optional: Check/request background permission if needed for the app's logic
     let bgStatus = backgroundPermissionStatus
     if (bgStatus !== Location.PermissionStatus.GRANTED) {
       bgStatus = await requestBackgroundPermission()
@@ -148,9 +144,6 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
       locationSubscription.current = null
     }
     setIsTracking(false)
-    // Optionally clear history or last location
-    // setCurrentLocation(null);
-    // setLocationHistory([]);
   }
 
   const formatLocationObject = (
