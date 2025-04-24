@@ -25,11 +25,11 @@ A fitness tracking app that uses real-time geolocation to track running routes w
   - [x] `expo-sensors` for additional motion data
 
 ### 2. Core Features Implementation
-- [ ] Location Tracking Service
-  - [ ] Create location tracking hook
-  - [ ] Implement permission handling
-  - [ ] Calculate speed, distance, and pace
-  - [ ] Track GPS coordinates for route drawing
+- [x] Location Tracking Service
+  - [x] Create location provider (`NewLocationProvider.tsx`)
+  - [x] Implement foreground and background permission handling
+  - [ ] Calculate speed, distance, and pace (Requires workout session context)
+  - [x] Track GPS coordinates for route drawing (Implemented via `locationHistory`)
 
 - [ ] Workout Session Management
   - [ ] Create session model (start time, end time, route data)
