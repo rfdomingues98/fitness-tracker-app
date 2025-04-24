@@ -6,21 +6,17 @@ import React, {
   useEffect,
   useState,
 } from 'react'
-import {LocationData, useLocation} from './LocationProvider'
-
-interface WorkoutSession {
-  startTime: number | null
-  endTime: number | null
-  duration: number // in seconds
-  routeData: LocationData[]
-  // Add distance, pace, etc. later
-}
+import {LocationPoint, WorkoutSession} from '../types/data'
+import {loadData, saveData, WORKOUT_SESSIONS_KEY} from '../utils/storage'
+import {calculateMetrics} from '../utils/workoutMetrics'
+import {useLocation} from './LocationProvider'
 
 interface WorkoutSessionContextState {
   session: WorkoutSession | null
+  pastSessions: WorkoutSession[]
   isActive: boolean
   startSession: () => void
-  stopSession: () => void
+  stopSession: (save: boolean) => void
 }
 
 const WorkoutSessionContext = createContext<
@@ -38,38 +34,63 @@ export const WorkoutSessionProvider: React.FC<WorkoutSessionProviderProps> = ({
     startTracking,
     stopTracking,
     locationHistory,
+    clearLocationHistory,
     isTracking: isLocationTracking,
   } = useLocation()
   const [session, setSession] = useState<WorkoutSession | null>(null)
+  const [pastSessions, setPastSessions] = useState<WorkoutSession[]>([])
   const [isActive, setIsActive] = useState(false)
-  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null)
 
   useEffect(() => {
-    if (isActive && isLocationTracking && sessionStartTime) {
-      const now = Date.now()
-      const currentDuration = Math.floor((now - sessionStartTime) / 1000)
-
-      setSession((prevSession) => ({
-        startTime: sessionStartTime,
-        endTime: null,
-        duration: currentDuration,
-        routeData: locationHistory,
-      }))
+    const loadInitialData = async () => {
+      const loadedSessions =
+        await loadData<WorkoutSession[]>(WORKOUT_SESSIONS_KEY)
+      if (loadedSessions) {
+        setPastSessions(loadedSessions)
+        console.log(`Loaded ${loadedSessions.length} past sessions.`)
+      }
     }
-    // Only re-run when locationHistory changes during an active session
-  }, [isActive, isLocationTracking, locationHistory, sessionStartTime])
+    loadInitialData()
+  }, [])
 
-  // Effect to track duration using an interval when active
+  useEffect(() => {
+    if (isActive && isLocationTracking && session?.startTime) {
+      const now = Date.now()
+      const currentDuration = Math.floor((now - session.startTime) / 1000)
+
+      const currentRoute: LocationPoint[] = locationHistory.map((loc) => ({
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        altitude: loc.altitude,
+        timestamp: loc.timestamp,
+        speed: loc.speed,
+        accuracy: loc.accuracy,
+      }))
+
+      setSession((prevSession) => {
+        if (!prevSession) return null
+
+        return {
+          ...prevSession,
+          duration: currentDuration,
+          route: currentRoute,
+        }
+      })
+    }
+  }, [isActive, isLocationTracking, locationHistory, session?.startTime])
+
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null
-    if (isActive && sessionStartTime) {
+    if (isActive && session?.startTime) {
       intervalId = setInterval(() => {
-        const now = Date.now()
-        const currentDuration = Math.floor((now - sessionStartTime) / 1000)
-        setSession((prevSession) => ({
-          ...(prevSession as WorkoutSession),
-          duration: currentDuration,
-        }))
+        setSession((prevSession) => {
+          if (!prevSession || !prevSession.startTime) return prevSession
+          const now = Date.now()
+          const currentDuration = Math.floor(
+            (now - prevSession.startTime) / 1000
+          )
+          return {...prevSession, duration: currentDuration}
+        })
       }, 1000)
     }
 
@@ -78,7 +99,7 @@ export const WorkoutSessionProvider: React.FC<WorkoutSessionProviderProps> = ({
         clearInterval(intervalId)
       }
     }
-  }, [isActive, sessionStartTime])
+  }, [isActive, session?.startTime])
 
   const startSession = useCallback(async () => {
     if (isActive) return
@@ -86,38 +107,83 @@ export const WorkoutSessionProvider: React.FC<WorkoutSessionProviderProps> = ({
     console.log('Starting workout session...')
     await startTracking()
     const startTime = Date.now()
-    setSessionStartTime(startTime)
-    setIsActive(true)
-    setSession({
+    const newSession: WorkoutSession = {
+      id: startTime.toString(),
       startTime: startTime,
       endTime: null,
       duration: 0,
-      routeData: [],
-    })
+      distance: 0,
+      avgPace: 0,
+      avgSpeed: 0,
+      maxSpeed: 0,
+      route: [],
+      status: 'ongoing',
+    }
+    setSession(newSession)
+    setIsActive(true)
   }, [isActive, startTracking])
 
-  const stopSession = useCallback(() => {
-    if (!isActive || !sessionStartTime) return
+  const stopSession = useCallback(
+    async (save: boolean) => {
+      if (!isActive || !session) return
 
-    console.log('Stopping workout session...')
-    stopTracking()
-    const endTime = Date.now()
-    const finalDuration = Math.floor((endTime - sessionStartTime) / 1000)
+      console.log(`Stopping workout session... Save: ${save}`)
+      stopTracking()
+      const endTime = Date.now()
+      const finalDuration = Math.floor((endTime - session.startTime) / 1000)
 
-    setSession((prevSession) => ({
-      ...(prevSession as WorkoutSession),
-      endTime: endTime,
-      duration: finalDuration,
-      routeData: locationHistory,
-    }))
-    setIsActive(false)
-    setSessionStartTime(null)
-    // TODO: Save session data to backend
-    console.log('Session stopped. Final data:', session)
-  }, [isActive, stopTracking, sessionStartTime, locationHistory, session])
+      const finalRoute: LocationPoint[] = locationHistory.map((loc) => ({
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        altitude: loc.altitude,
+        timestamp: loc.timestamp,
+        speed: loc.speed,
+        accuracy: loc.accuracy,
+      }))
+
+      const finalMetrics = calculateMetrics(finalRoute)
+
+      const finalSession: WorkoutSession = {
+        ...session,
+        endTime: endTime,
+        duration: finalDuration,
+        route: finalRoute,
+        distance: finalMetrics.distance,
+        avgPace: finalMetrics.avgPace,
+        avgSpeed: finalMetrics.avgSpeed,
+        maxSpeed: finalMetrics.maxSpeed,
+        status: save ? 'completed' : 'discarded',
+      }
+
+      if (save) {
+        const updatedPastSessions = [...pastSessions, finalSession]
+        setPastSessions(updatedPastSessions)
+        await saveData<WorkoutSession[]>(
+          WORKOUT_SESSIONS_KEY,
+          updatedPastSessions
+        )
+        console.log('Session saved locally.')
+      } else {
+        console.log('Session discarded.')
+      }
+
+      setSession(null)
+      setIsActive(false)
+      clearLocationHistory()
+    },
+    [
+      isActive,
+      session,
+      stopTracking,
+      pastSessions,
+      locationHistory,
+      clearLocationHistory,
+    ]
+  )
 
   const contextValue: WorkoutSessionContextState = {
     session,
+    pastSessions,
     isActive,
     startSession,
     stopSession,

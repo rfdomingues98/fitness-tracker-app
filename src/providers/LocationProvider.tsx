@@ -30,6 +30,7 @@ interface LocationContextState {
   requestBackgroundPermission: () => Promise<Location.PermissionStatus>
   startTracking: () => Promise<void>
   stopTracking: () => void
+  clearLocationHistory: () => void
 }
 
 const LocationContext = createContext<LocationContextState | undefined>(
@@ -146,6 +147,10 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
     setIsTracking(false)
   }
 
+  const clearLocationHistory = () => {
+    setLocationHistory([])
+  }
+
   const formatLocationObject = (
     location: Location.LocationObject
   ): LocationData => ({
@@ -178,6 +183,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
     requestBackgroundPermission,
     startTracking,
     stopTracking,
+    clearLocationHistory,
   }
 
   return (

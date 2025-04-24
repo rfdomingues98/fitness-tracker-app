@@ -53,9 +53,9 @@ A local-first fitness tracking app that uses real-time geolocation to track runn
 
 - [ ] Local Data Persistence & Backend Sync
   - [ ] Local Storage (AsyncStorage):
-    - [ ] Define data structure for local storage (e.g., keys for workouts, user data)
-    - [ ] Create utility functions/service for interacting with AsyncStorage
-    - [ ] Implement local session saving using AsyncStorage
+    - [x] Define data structure for local storage (e.g., keys for workouts, user data)
+    - [x] Create utility functions/service for interacting with AsyncStorage
+    - [x] Implement local session saving using AsyncStorage
   - [ ] Backend Synchronization (using Legend State & Supabase Postgres):
     - [ ] Set up Supabase project and Postgres database
     - [ ] Define backend Postgres schema (mirroring/extending local structure)
