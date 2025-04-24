@@ -1,17 +1,20 @@
 # Fitness Tracker App - Implementation Plan
 
 ## Project Overview
-A fitness tracking app that uses real-time geolocation to track running routes with:
+A local-first fitness tracking app that uses real-time geolocation to track running routes with:
 - Session management (start/stop)
 - Real-time map display 
 - Live metrics (speed, duration, pace)
 - Future dashboard with history and analytics
+- Optional synchronization with a backend service (e.g., Supabase) for data backup and multi-device access.
 
 ## Tech Stack
 - Expo/React Native
 - Mapbox for mapping
 - NativeWind for styling
-- SQLite for local storage
+- AsyncStorage for local storage
+- Supabase (or similar BaaS) for backend synchronization (using Postgres DB)
+- Legend State for state management and synchronization
 
 ## Phase 1: Setup & Core Functionality
 
@@ -21,20 +24,21 @@ A fitness tracking app that uses real-time geolocation to track running routes w
   - [x] `expo-location` for geolocation tracking
   - [x] `@rnmapbox/maps` for Mapbox integration
   - [x] `nativewind` and configure Tailwind CSS
-  - [x] `expo-sqlite` for local data storage
+  - [x] `@react-native-async-storage/async-storage` for local data storage
   - [x] `expo-sensors` for additional motion data
+  - [x] `@legendapp/state` for state management
 
 ### 2. Core Features Implementation
 - [x] Location Tracking Service
-  - [x] Create location provider (`NewLocationProvider.tsx`)
+  - [x] Create location provider (`LocationProvider.tsx`)
   - [x] Implement foreground and background permission handling
   - [ ] Calculate speed, distance, and pace (Requires workout session context)
   - [x] Track GPS coordinates for route drawing (Implemented via `locationHistory`)
 
-- [ ] Workout Session Management
-  - [ ] Create session model (start time, end time, route data)
-  - [ ] Implement start/stop functionality
-  - [ ] Background tracking capability 
+- [x] Workout Session Management
+  - [x] Create session provider (`WorkoutSessionProvider.tsx`)
+  - [x] Implement start/stop functionality interacting with `LocationProvider`
+  - [ ] Background tracking capability (Needs further implementation, possibly with `expo-task-manager`)
 
 - [ ] Map Integration
   - [ ] Set up Mapbox component
@@ -47,10 +51,18 @@ A fitness tracking app that uses real-time geolocation to track running routes w
   - [ ] Show current speed, pace, duration, distance
   - [ ] Add calorie estimation algorithm
 
-- [ ] Data Persistence
-  - [ ] Design SQLite schema for workouts
-  - [ ] Create data service for CRUD operations
-  - [ ] Implement session saving functionality
+- [ ] Local Data Persistence & Backend Sync
+  - [ ] Local Storage (AsyncStorage):
+    - [ ] Define data structure for local storage (e.g., keys for workouts, user data)
+    - [ ] Create utility functions/service for interacting with AsyncStorage
+    - [ ] Implement local session saving using AsyncStorage
+  - [ ] Backend Synchronization (using Legend State & Supabase Postgres):
+    - [ ] Set up Supabase project and Postgres database
+    - [ ] Define backend Postgres schema (mirroring/extending local structure)
+    - [ ] Configure Legend State persistence adapters for AsyncStorage and Supabase.
+    - [ ] Implement sync logic using Legend State observables and persistence features.
+    - [ ] Handle potential sync conflicts (e.g., leveraging Legend State's conflict resolution mechanisms or implementing custom logic).
+    - [ ] Implement authentication for backend sync (using Supabase Auth)
 
 ## Phase 2: UI Implementation
 
@@ -112,3 +124,5 @@ A fitness tracking app that uses real-time geolocation to track running routes w
 - Implement battery optimization strategies
 - Address potential GPS accuracy issues
 - Consider offline functionality for areas with poor connectivity
+- Develop a robust synchronization strategy, handling conflicts and ensuring data integrity.
+- Ensure the core app functionality remains fully operational offline.
