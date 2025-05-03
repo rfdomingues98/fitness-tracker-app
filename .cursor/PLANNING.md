@@ -10,7 +10,7 @@ A local-first fitness tracking app that uses real-time geolocation to track runn
 
 ## Tech Stack
 - Expo/React Native
-- Mapbox for mapping
+- react-native-maps for mapping
 - NativeWind for styling
 - AsyncStorage for local storage
 - Supabase (or similar BaaS) for backend synchronization (using Postgres DB)
@@ -40,11 +40,11 @@ A local-first fitness tracking app that uses real-time geolocation to track runn
   - [x] Implement start/stop functionality interacting with `LocationProvider`
   - [ ] Background tracking capability (Needs further implementation, possibly with `expo-task-manager`)
 
-- [ ] Map Integration
-  - [ ] Set up Mapbox component
-  - [ ] Display real-time user location
-  - [ ] Draw route path as user moves
-  - [ ] Add map controls (zoom, center on user)
+- [x] Map Integration
+  - [x] Set up react-native-maps component
+  - [x] Display real-time user location
+  - [x] Draw route path as user moves
+  - [x] Add map controls (zoom, center on user)
 
 - [ ] Real-time Metrics Display
   - [ ] Create metrics component

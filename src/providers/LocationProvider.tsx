@@ -1,4 +1,5 @@
 import * as Location from 'expo-location'
+import {DeviceMotion} from 'expo-sensors'
 import React, {
   createContext,
   ReactNode,
@@ -73,16 +74,6 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
 
   const requestBackgroundPermission =
     async (): Promise<Location.PermissionStatus> => {
-      const foregroundStatus = await requestForegroundPermission()
-      if (foregroundStatus !== Location.PermissionStatus.GRANTED) {
-        console.warn(
-          'Foreground permission is required before requesting background permission.'
-        )
-        const currentBackground = await Location.getBackgroundPermissionsAsync()
-        setBackgroundPermissionStatus(currentBackground.status)
-        return currentBackground.status
-      }
-
       const {status} = await Location.requestBackgroundPermissionsAsync()
       setBackgroundPermissionStatus(status)
       return status
@@ -91,7 +82,9 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
   const startTracking = async () => {
     if (isTracking) return
 
+    console.log('Starting tracking')
     let fgStatus = foregroundPermissionStatus
+    console.log('Foreground permission status:', fgStatus)
     if (fgStatus !== Location.PermissionStatus.GRANTED) {
       fgStatus = await requestForegroundPermission()
     }
@@ -102,7 +95,8 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
       return
     }
 
-    let bgStatus = backgroundPermissionStatus
+    /* let bgStatus = backgroundPermissionStatus
+    console.log('Background permission status:', bgStatus)
     if (bgStatus !== Location.PermissionStatus.GRANTED) {
       bgStatus = await requestBackgroundPermission()
       if (bgStatus !== Location.PermissionStatus.GRANTED) {
@@ -110,9 +104,11 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
           'Background location permission not granted. Tracking might be limited.'
         )
       }
-    }
+    } */
 
+    console.log('Starting location tracking', fgStatus)
     try {
+      console.log('Getting initial location')
       const initialLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Highest,
       })
@@ -123,18 +119,20 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
       locationSubscription.current = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 500, // Update every half second
+          timeInterval: 200, // Update every half second
           distanceInterval: 1, // Update every meter
         },
         (location) => {
           const formattedLocation = formatLocationObject(location)
           setCurrentLocation(formattedLocation)
+          console.log('Current Location:', formattedLocation)
           setLocationHistory((prev) => [...prev, formattedLocation])
         }
       )
+
       setIsTracking(true)
     } catch (error) {
-      console.error('Error starting location tracking:', error)
+      console.error('Error starting location/motion tracking:', error)
       setIsTracking(false)
     }
   }
@@ -166,6 +164,12 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({
 
   useEffect(() => {
     checkPermissions()
+    // Check if DeviceMotion is available
+    DeviceMotion.isAvailableAsync().then((available) => {
+      if (!available) {
+        console.warn('Device Motion sensor is not available on this device.')
+      }
+    })
 
     return () => {
       stopTracking()
