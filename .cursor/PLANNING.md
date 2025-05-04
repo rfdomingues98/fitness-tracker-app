@@ -46,9 +46,10 @@ A local-first fitness tracking app that uses real-time geolocation to track runn
   - [x] Draw route path as user moves
   - [x] Add map controls (zoom, center on user)
 
-- [ ] Real-time Metrics Display
-  - [ ] Create metrics component
-  - [ ] Show current speed, pace, duration, distance
+- [ ] Real-time Metrics Display (Partial)
+  - [x] Create metrics component (`MetricsDisplay.tsx`)
+  - [x] Show current duration
+  - [x] Show current speed, pace, distance (Calculated in `MetricsDisplay`)
   - [ ] Add calorie estimation algorithm
 
 - [ ] Local Data Persistence & Backend Sync

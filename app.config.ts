@@ -28,6 +28,11 @@ export default ({config}: ConfigContext): ExpoConfig => {
           apiKey: process.env.GOOGLE_MAPS_API_KEY,
         },
       },
+      permissions: [
+        'ACCESS_FINE_LOCATION',
+        'ACCESS_COARSE_LOCATION',
+        'ACCESS_BACKGROUND_LOCATION',
+      ],
     },
     web: {
       bundler: 'metro',
